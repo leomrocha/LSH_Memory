@@ -4,9 +4,10 @@ import os
 import subprocess
 
 import numpy as np
-from scipy.misc import imresize
-from scipy.misc import imrotate
-from scipy.ndimage import imread
+from skimage.transform import resize
+from skimage.transform import rotate
+from skimage.color import rgb2gray
+from imageio import imread
 import tensorflow as tf
 
 
@@ -34,12 +35,12 @@ def crawl_directory(directory, augment_with_rotations=False, first_label=0):
 
     for file_name in files:
       full_file_name = os.path.join(root, file_name)
-      img = imread(full_file_name, flatten=True)
+      img = rgb2gray(imread(full_file_name))
       for idx, angle in enumerate([0, 90, 180, 270]):
         if not augment_with_rotations and idx > 0:
           break
 
-        images.append(imrotate(img, angle))
+        images.append(rotate(img, angle))
         labels.append(label_idx + idx)
         info.append(full_file_name)
 
@@ -53,9 +54,8 @@ def resize_images(images, new_width, new_height):
   resized_images = np.zeros([images.shape[0], new_width, new_height], dtype=np.float32)
 
   for idx in range(images.shape[0]):
-    resized_images[idx, :, :] = imresize(images[idx, :, :],
+    resized_images[idx, :, :] = resize(images[idx, :, :],
                                        [new_width, new_height],
-                                       interp='bilinear',
                                        mode=None)
   return resized_images
 
